@@ -3,7 +3,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-import jakarta.annotation.Generated;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -39,20 +38,19 @@ public class Pedido {
         this.status = "PENDENTE";
     }
 
-    public void adicionarItem(ItemPedido item){
+    public void adicionarItem(Produto produto, int quantidade){
         ItemPedido item = new ItemPedido(produto, quantidade, this);
-        this.itens.add(item)
-        recalculateValorTotal();
+        this.itens.add(item);
+        recalcularValorTotal();
     }
 
     private void recalcularValorTotal(){
         BigDecimal totalCalculado = BigDecimal.ZERO;
         for(ItemPedido item : this.itens){
-            BigDecimal subtotal = item.getprecoUnitario().multiply(new BigDecimal(item.getQuantidade()));
+            BigDecimal subtotal = item.getPrecoUnitario().multiply(new BigDecimal(item.getQuantidade()));
             totalCalculado = totalCalculado.add(subtotal);
         }
-        this.valorTotal
-
+        this.valorTotal = totalCalculado;
     }
     
     public Long getId() {
