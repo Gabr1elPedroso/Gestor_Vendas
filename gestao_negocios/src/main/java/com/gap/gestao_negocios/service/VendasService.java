@@ -1,4 +1,6 @@
 package com.gap.gestao_negocios.service;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -48,5 +50,13 @@ public class VendasService {
 
         return pedidoSalvo;
         
+    }
+
+    public Pedido buscarPorId(Long id){
+        return pedidoRepository.findById(id).orElseThrow(() -> new RuntimeException("Pedido não encontrado: " + id));
+    }
+
+    public List<Pedido> listarTodos(){
+        return pedidoRepository.findAll();
     }
 }
