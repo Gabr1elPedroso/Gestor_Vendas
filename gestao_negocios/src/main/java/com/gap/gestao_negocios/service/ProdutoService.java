@@ -27,7 +27,7 @@ public class ProdutoService {
         return produtoRepository.save(produtoExistente);
     }
 
-    public Produto deletar(Long id){
+    public Produto deletarProduto(Long id){
         Produto produtoExistente = produtoRepository.findById(id).orElseThrow(() -> new RuntimeException("Produto não encontrado: " + id));
         produtoRepository.delete(produtoExistente);
         return produtoExistente;
