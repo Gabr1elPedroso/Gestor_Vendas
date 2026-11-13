@@ -70,9 +70,10 @@ public class ProdutoController {
         }
     }
 
-    @PutMapping
-    public ResponseEntity<Produto> atualizarProduto(@RequestBody Produto produto){
+    @PutMapping("{id}")
+    public ResponseEntity<Produto> atualizarProduto(@PathVariable Long id, @RequestBody Produto produto){
         try{
+            produto.setId(id);  
             Produto produtoAtualizado = ProdutoService.atualizar(produto);
             return ResponseEntity.ok(produtoAtualizado);
         }catch (Exception e){

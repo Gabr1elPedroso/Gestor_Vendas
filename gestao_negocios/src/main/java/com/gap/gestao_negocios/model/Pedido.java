@@ -1,7 +1,7 @@
 package com.gap.gestao_negocios.model;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -22,7 +22,7 @@ public class Pedido {
     private LocalDateTime dataHora;
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
-    private ArrayList<ItemPedido> itens;
+    private List<ItemPedido> itens;
     
     @Column(name = "valor_total", nullable = false, precision = 10, scale = 2)
     private BigDecimal valorTotal;
@@ -69,11 +69,11 @@ public class Pedido {
         this.dataHora = dataHora;
     }
 
-    public ArrayList<ItemPedido> getItens() {
+    public List<ItemPedido> getItens() {
         return itens;
     }
 
-    public void setItens(ArrayList<ItemPedido> itens) {
+    public void setItens(List<ItemPedido> itens) {
         this.itens = itens;
     }
 
