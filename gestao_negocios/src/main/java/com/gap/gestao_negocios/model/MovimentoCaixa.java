@@ -49,14 +49,7 @@ public class MovimentoCaixa {
         this.id = id;
     }
 
-    public Pedido getStatus() {
-        return status;
-    }
-
-    public void setStatus(Pedido status) {
-        this.status = status;
-    }
-
+  
     public BigDecimal getValor() {
         return valor;
     }
@@ -79,6 +72,14 @@ public class MovimentoCaixa {
 
     public void setDescricao(String descricao) {
         this.descricao = descricao;
+    }
+
+    public TipoMovimento getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(TipoMovimento tipo) {
+        this.tipo = tipo;
     }
     
 }
