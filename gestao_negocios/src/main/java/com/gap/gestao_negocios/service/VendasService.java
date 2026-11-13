@@ -1,4 +1,5 @@
 package com.gap.gestao_negocios.service;
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +29,12 @@ public class VendasService {
     @Autowired 
     private MovimentoCaixaRepository movimentoCaixaRepository;
 
+    @Autowired 
+    private MovimentoCaixaService movimentoCaixaService;
 
     @Transactional 
     public Pedido finalizarVenda(Pedido pedido){
+        BigDecimal valorTotal = BigDecimal.ZERO;
         for(ItemPedido item : pedido.getItens()){
             Produto produto = produtoRepository.findById(item.getProduto().getId()).orElseThrow(() -> new RuntimeException("Produto não encontrado: " + item.getProduto().getId()));
             
@@ -39,9 +43,13 @@ public class VendasService {
 
             item.setProduto(produto);
             item.setPedido(pedido);
+            item.setPrecoUnitario(produto.getPreco());
 
+            BigDecimal valorItem = produto.getPreco().multiply(BigDecimal.valueOf(item.getQuantidade()));
+            valorTotal = valorTotal.add(valorItem);
         }
 
+        pedido.setValorTotal(valorTotal);
 
         Pedido pedidoSalvo = pedidoRepository.save(pedido);
 
