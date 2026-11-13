@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDV & Gestão Comercial</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="container mx-auto p-6 max-w-6xl">
+        <!-- Cabeçalho -->
+        <header class="bg-blue-600 text-white p-5 rounded-lg shadow-md mb-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">🛒 Sistema PDV - Gestão Comercial</h1>
+                <p class="text-blue-100 text-sm">Versão Comercial Portátil</p>
+            </div>
+            <div id="saldo-box" class="bg-blue-800 px-5 py-3 rounded-lg shadow font-semibold text-lg">
+                Caixa: R$ 0,00
+            </div>
+        </header>
+
+        <!-- Grid Principal -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- COLUNA 1 & 2: Produtos e Frente de Caixa -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Nova Venda / PDV -->
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-green-500">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700">⚡ Frente de Caixa (Nova Venda)</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-600">Selecione o Produto</label>
+                            <select id="select-produto" class="w-full mt-1 p-2 border rounded focus:ring focus:ring-green-300">
+                                <option value="">Carregando produtos...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600">Quantidade</label>
+                            <input type="number" id="qtd-venda" value="1" min="1" class="w-full mt-1 p-2 border rounded focus:ring focus:ring-green-300">
+                        </div>
+                    </div>
+                    <button onclick="adicionarAoCarrinho()" class="w-full bg-green-600 text-white p-2.5 rounded font-semibold hover:bg-green-700 transition shadow">
+                        ➕ Adicionar ao Carrinho
+                    </button>
+
+                    <!-- Tabela do Carrinho -->
+                    <div class="mt-6">
+                        <h3 class="text-md font-semibold text-gray-700 mb-2">Itens da Venda Atual</h3>
+                        <div class="overflow-x-auto border rounded max-h-48 overflow-y-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
+                                    <tr>
+                                        <th class="p-2">Produto</th>
+                                        <th class="p-2">Preço Unit.</th>
+                                        <th class="p-2">Qtd</th>
+                                        <th class="p-2">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-carrinho" class="text-sm divide-y divide-gray-200">
+                                    <tr>
+                                        <td colspan="4" class="p-4 text-center text-gray-400">Carrinho vazio</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="flex justify-between items-center mt-4 pt-2 border-t">
+                            <span class="text-lg font-bold text-gray-700">Total a Pagar: <span id="total-carrinho" class="text-green-600">R$ 0,00</span></span>
+                            <button onclick="finalizarVenda()" class="bg-blue-600 text-white px-6 py-2.5 rounded font-semibold hover:bg-blue-700 transition shadow">
+                                💰 Finalizar Venda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Produtos Cadastrados -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-700">📦 Estoque de Produtos</h2>
+                        <button onclick="carregarDados()" class="text-sm bg-gray-100 text-gray-600 px-3 py-1.5 rounded hover:bg-gray-200 transition">
+                            🔄 Atualizar
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto max-h-60 overflow-y-auto border rounded">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
+                                <tr>
+                                    <th class="p-2">ID</th>
+                                    <th class="p-2">Nome</th>
+                                    <th class="p-2">Preço</th>
+                                    <th class="p-2">Estoque</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-produtos" class="text-sm divide-y divide-gray-200">
+                                <!-- Inserido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- COLUNA 3: Cadastro de Produtos -->
+            <div class="bg-white p-6 rounded-lg shadow-md h-fit border-t-4 border-blue-500">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">➕ Cadastrar Produto</h2>
+                <form id="form-produto" onsubmit="cadastrarProduto(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600">Nome do Produto</label>
+                        <input type="text" id="nome" required class="w-full mt-1 p-2 border rounded focus:ring focus:ring-blue-300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600">Preço de Venda (R$)</label>
+                        <input type="number" step="0.01" id="preco" required class="w-full mt-1 p-2 border rounded focus:ring focus:ring-blue-300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600">Quantidade Inicial</label>
+                        <input type="number" id="estoque" required class="w-full mt-1 p-2 border rounded focus:ring focus:ring-blue-300">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white p-2.5 rounded font-semibold hover:bg-blue-700 transition shadow">
+                        Salvar no Estoque
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script de Integração -->
+    <script>
+        const API_URL = 'http://localhost:8080/api';
+        let produtosCache = [];
+        let carrinho = [];
+
+        async function carregarDados() {
+            await buscarProdutos();
+            await buscarSaldoCaixa();
+        }
+
+        async function buscarProdutos() {
+            try {
+                const response = await fetch(`${API_URL}/produtos`);
+                produtosCache = await response.json();
+                
+                // Preenche a tabela de estoque
+                const tabela = document.getElementById('tabela-produtos');
+                tabela.innerHTML = '';
+                
+                // Preenche o select da venda
+                const select = document.getElementById('select-produto');
+                select.innerHTML = '<option value="">Selecione um produto...</option>';
+
+                produtosCache.forEach(p => {
+                    tabela.innerHTML += `
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-2">${p.id}</td>
+                            <td class="p-2 font-medium">${p.nome}</td>
+                            <td class="p-2">R$ ${p.preco.toFixed(2)}</td>
+                            <td class="p-2"><span class="px-2 py-0.5 rounded text-xs ${p.quantidadeEstoque > 5 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.quantidadeEstoque} un</span></td>
+                        </tr>
+                    `;
+
+                    select.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${p.preco.toFixed(2)} (Estoque: ${p.quantidadeEstoque})</option>`;
+                });
+            } catch (error) {
+                console.error("Erro ao buscar produtos:", error);
+            }
+        }
+
+        async function buscarSaldoCaixa() {
+            try {
+                const response = await fetch(`${API_URL}/movimentos-caixa/saldo`);
+                const saldo = await response.json();
+                document.getElementById('saldo-box').innerText = `Caixa: R$ ${saldo.toFixed(2)}`;
+            } catch (error) {
+                document.getElementById('saldo-box').innerText = `Caixa: R$ 0,00`;
+            }
+        }
+
+        async function cadastrarProduto(event) {
+            event.preventDefault();
+            const produto = {
+                nome: document.getElementById('nome').value,
+                preco: parseFloat(document.getElementById('preco').value),
+                quantidadeEstoque: parseInt(document.getElementById('estoque').value)
+            };
+
+            const response = await fetch(`${API_URL}/produtos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(produto)
+            });
+
+            if (response.ok) {
+                alert('Produto cadastrado com sucesso!');
+                document.getElementById('form-produto').reset();
+                carregarDados();
+            } else {
+                alert('Erro ao cadastrar produto.');
+            }
+        }
+
+        function adicionarAoCarrinho() {
+            const produtoId = parseInt(document.getElementById('select-produto').value);
+            const quantidade = parseInt(document.getElementById('qtd-venda').value);
+
+            if (!produtoId) {
+                alert('Selecione um produto.');
+                return;
+            }
+
+            const produtoObj = produtosCache.find(p => p.id === produtoId);
+            if (!produtoObj) return;
+
+            if (quantidade > produtoObj.quantidadeEstoque) {
+                alert('Quantidade solicitada maior que o estoque disponível!');
+                return;
+            }
+
+            // Adiciona ao carrinho local
+            carrinho.push({
+                produto: { id: produtoObj.id },
+                nome: produtoObj.nome,
+                precoUnitario: produtoObj.preco,
+                quantidade: quantidade
+            });
+
+            atualizarTabelaCarrinho();
+        }
+
+        function atualizarTabelaCarrinho() {
+            const tabela = document.getElementById('tabela-carrinho');
+            tabela.innerHTML = '';
+            let totalGeral = 0;
+
+            if (carrinho.length === 0) {
+                tabela.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">Carrinho vazio</td></tr>`;
+                document.getElementById('total-carrinho').innerText = `R$ 0,00`;
+                return;
+            }
+
+            carrinho.forEach((item, index) => {
+                let subtotal = item.precoUnitario * item.quantidade;
+                totalGeral += subtotal;
+
+                tabela.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-2">${item.nome}</td>
+                        <td class="p-2">R$ ${item.precoUnitario.toFixed(2)}</td>
+                        <td class="p-2">${item.quantidade}</td>
+                        <td class="p-2 font-semibold">R$ ${subtotal.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('total-carrinho').innerText = `R$ ${totalGeral.toFixed(2)}`;
+        }
+
+        async function finalizarVenda() {
+            if (carrinho.length === 0) {
+                alert('Adicione itens ao carrinho antes de finalizar a venda.');
+                return;
+            }
+
+            const pedidoDTO = {
+                itens: carrinho.map(item => ({
+                    produto: { id: item.produto.id },
+                    quantidade: item.quantidade
+                }))
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/vendas`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(pedidoDTO)
+                });
+
+                if (response.ok) {
+                    alert('Venda finalizada com sucesso! Estoque baixado e caixa movimentado.');
+                    carrinho = [];
+                    atualizarTabelaCarrinho();
+                    carregarDados();
+                } else {
+                    alert('Erro ao finalizar venda. Verifique o estoque.');
+                }
+            } catch (error) {
+                console.error("Erro na venda:", error);
+            }
+        }
+
+        window.onload = carregarDados;
+    </script>
+</body>
+</html>
