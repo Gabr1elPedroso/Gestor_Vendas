@@ -3,6 +3,7 @@ package com.gap.gestao_negocios.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.http.HttpStatus;
 
 import com.gap.gestao_negocios.model.Pedido;
 import com.gap.gestao_negocios.service.VendasService;
@@ -46,8 +46,8 @@ public class VendasController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Pedido>> listarTodas() {
-    List<Pedido> vendas = vendasService.listarTodas();
+    public ResponseEntity<List<Pedido>> listarTodos() {
+    List<Pedido> vendas = vendasService.listarTodos();
     return ResponseEntity.ok(vendas);
 }
     
