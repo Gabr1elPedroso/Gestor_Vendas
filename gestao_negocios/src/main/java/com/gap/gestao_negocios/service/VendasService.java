@@ -68,6 +68,8 @@ public class VendasService {
                 "PEDIDO" + pedidoSalvo.getId()
         );
 
+        pedidoSalvo.setPixCopiaECola(pixPayload);
+
         return pedidoSalvo;
 
     }
