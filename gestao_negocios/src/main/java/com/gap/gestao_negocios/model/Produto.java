@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 @Entity 
@@ -13,6 +14,7 @@ import jakarta.persistence.Table;
 public class Produto{
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SequenceGenerator(name = "seq", allocationSize = 1)
     private Long id;
 
     @Column(nullable = false, length = 100)
@@ -23,6 +25,9 @@ public class Produto{
 
     @Column(name = "quantidade_estoque", nullable = false)
     private int quantidadeEstoque;
+
+    @Column 
+    private Boolean ativo = true;
 
 
     public Produto() {
