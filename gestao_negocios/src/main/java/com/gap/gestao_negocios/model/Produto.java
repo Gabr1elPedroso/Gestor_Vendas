@@ -1,4 +1,5 @@
 package com.gap.gestao_negocios.model;
+
 import java.math.BigDecimal;
 
 import jakarta.persistence.Column;
@@ -9,12 +10,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
-@Entity 
+@Entity
 @Table(name = "produtos")
-public class Produto{
-    @Id 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "seq", allocationSize = 1)
+public class Produto {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "produto_seq")
+    @SequenceGenerator(name = "produto_seq", sequenceName = "produto_seq", allocationSize = 1)
     private Long id;
 
     @Column(nullable = false, length = 100)
@@ -26,22 +28,19 @@ public class Produto{
     @Column(name = "quantidade_estoque", nullable = false)
     private int quantidadeEstoque;
 
-    @Column 
+    @Column
     private Boolean ativo = true;
-
 
     public Produto() {
 
     }
 
-
-    public void baixarEstoque(int quantidadeVendida){
-        if(this.quantidadeEstoque < quantidadeVendida){
+    public void baixarEstoque(int quantidadeVendida) {
+        if (this.quantidadeEstoque < quantidadeVendida) {
             throw new RuntimeException("Quantidade em estoque insuficiente para o produto: " + this.nome);
         }
         this.quantidadeEstoque -= quantidadeVendida;
     }
-
 
     public Long getId() {
         return id;

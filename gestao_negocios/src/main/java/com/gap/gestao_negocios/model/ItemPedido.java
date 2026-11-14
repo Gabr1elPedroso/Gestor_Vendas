@@ -1,4 +1,5 @@
 package com.gap.gestao_negocios.model;
+
 import java.math.BigDecimal;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -14,22 +15,23 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Data;
 
-@Entity 
+@Entity
 @Table(name = "itens_pedido")
-@Data 
+@Data
 public class ItemPedido {
-    @Id 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "seq", allocationSize = 1)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "itemPedido_seq")
+    @SequenceGenerator(name = "itemPedido_seq", sequenceName = "itemPedido_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne
     @JoinColumn(name = "produto_id", nullable = false)
     private Produto produto;
-    
+
     @ManyToOne
-    @JoinColumn (name = "pedido_id", nullable = false)
-    @JsonIgnore 
+    @JoinColumn(name = "pedido_id", nullable = false)
+    @JsonIgnore
     private Pedido pedido;
 
     @Column(nullable = false)
@@ -38,22 +40,20 @@ public class ItemPedido {
     @Column(name = "preco_unitario", nullable = false, precision = 10, scale = 2)
     private BigDecimal precoUnitario;
 
-
-    public ItemPedido(){
+    public ItemPedido() {
 
     }
 
-    public ItemPedido(Produto produto, int quantidade, Pedido pedido){
+    public ItemPedido(Produto produto, int quantidade, Pedido pedido) {
         this.produto = produto;
         this.quantidade = quantidade;
         this.pedido = pedido;
         this.precoUnitario = produto.getPreco();
     }
 
-    public BigDecimal calcularPrecoUnitario(Produto preco, int quantidade){
+    public BigDecimal calcularPrecoUnitario(Produto preco, int quantidade) {
         return this.precoUnitario = preco.getPreco().multiply(new BigDecimal(quantidade));
     }
-
 
     public Long getId() {
         return id;
@@ -94,5 +94,5 @@ public class ItemPedido {
     public void setPedido(Pedido pedido) {
         this.pedido = pedido;
     }
-    
+
 }

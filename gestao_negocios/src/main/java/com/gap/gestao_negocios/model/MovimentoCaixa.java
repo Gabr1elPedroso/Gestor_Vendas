@@ -17,8 +17,8 @@ import jakarta.persistence.Table;
 @Table(name = "movimentos_caixa")
 public class MovimentoCaixa {
     @Id 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "movimento_caixa_seq")
+    @SequenceGenerator(name = "movimento_caixa_seq", sequenceName = "movimento_caixa_seq", allocationSize = 1)
     private Long id;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)

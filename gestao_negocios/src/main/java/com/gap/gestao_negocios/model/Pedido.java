@@ -1,4 +1,5 @@
 package com.gap.gestao_negocios.model;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,19 +15,20 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
-@Entity 
+@Entity
 @Table(name = "pedidos")
 public class Pedido {
-    @Id 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "seq", allocationSize = 1)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pedido_seq")
+    @SequenceGenerator(name = "pedido_seq", sequenceName = "pedido_seq", allocationSize = 1)
     private Long id;
     @Column(name = "data_hora", nullable = false)
     private LocalDateTime dataHora;
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemPedido> itens;
-    
+
     @Column(name = "valor_total", nullable = false, precision = 10, scale = 2)
     private BigDecimal valorTotal;
 
@@ -36,29 +38,27 @@ public class Pedido {
     @Transient
     private String pixCopiaECola;
 
-
-
-    public Pedido(){
+    public Pedido() {
         this.dataHora = LocalDateTime.now();
         this.valorTotal = BigDecimal.ZERO;
         this.status = "PENDENTE";
     }
 
-    public void adicionarItem(Produto produto, int quantidade){
+    public void adicionarItem(Produto produto, int quantidade) {
         ItemPedido item = new ItemPedido(produto, quantidade, this);
         this.itens.add(item);
         recalcularValorTotal();
     }
 
-    private void recalcularValorTotal(){
+    private void recalcularValorTotal() {
         BigDecimal totalCalculado = BigDecimal.ZERO;
-        for(ItemPedido item : this.itens){
+        for (ItemPedido item : this.itens) {
             BigDecimal subtotal = item.getPrecoUnitario().multiply(new BigDecimal(item.getQuantidade()));
             totalCalculado = totalCalculado.add(subtotal);
         }
         this.valorTotal = totalCalculado;
     }
-    
+
     public Long getId() {
         return id;
     }
@@ -106,5 +106,5 @@ public class Pedido {
     public void setPixCopiaECola(String pixCopiaECola) {
         this.pixCopiaECola = pixCopiaECola;
     }
-    
+
 }
