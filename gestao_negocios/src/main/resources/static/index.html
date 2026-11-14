@@ -3,214 +3,348 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDV & Gestão Comercial</title>
+    <title>GAP - Sistema PDV & Gestão Comercial</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca para gerar QR Code do Pix -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col">
 
-    <div class="container mx-auto p-6 max-w-6xl">
-        <!-- Cabeçalho -->
-        <header class="bg-blue-600 text-white p-5 rounded-lg shadow-md mb-6 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold">🛒 Sistema PDV - Gestão Comercial</h1>
-                <p class="text-blue-100 text-sm">Versão Comercial Portátil</p>
+    <!-- HEADER SUPERIOR COMPLETO -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
+        <div class="container mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">🔥</span>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">GAP Gestão Comercial</h1>
+                    <p class="text-xs text-slate-400">Sistema PDV Portátil</p>
+                </div>
             </div>
-            <div id="saldo-box" class="bg-blue-800 px-5 py-3 rounded-lg shadow font-semibold text-lg">
-                Caixa: R$ 0,00
-            </div>
-        </header>
 
-        <!-- Grid Principal -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <!-- COLUNA 1 & 2: Produtos e Frente de Caixa -->
-            <div class="lg:col-span-2 space-y-6">
-                
-                <!-- Nova Venda / PDV -->
-                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-green-500">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-700">⚡ Frente de Caixa (Nova Venda)</h2>
-                    
+            <!-- Navegação Principal -->
+            <nav class="flex flex-wrap gap-2">
+                <button onclick="mudarTab('dashboard')" id="btn-tab-dashboard" class="px-4 py-2 rounded-lg font-semibold text-sm transition bg-blue-600 text-white shadow">
+                    📊 Início / PDV
+                </button>
+                <button onclick="mudarTab('estoque')" id="btn-tab-estoque" class="px-4 py-2 rounded-lg font-semibold text-sm transition bg-slate-800 text-slate-300 hover:bg-slate-700">
+                    📦 Estoque
+                </button>
+                <button onclick="mudarTab('caixa')" id="btn-tab-caixa" class="px-4 py-2 rounded-lg font-semibold text-sm transition bg-slate-800 text-slate-300 hover:bg-slate-700">
+                    💸 Caixa & Relatórios
+                </button>
+            </nav>
+
+            <!-- Saldo Rápido no Topo -->
+            <div class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg text-right">
+                <span class="block text-xs text-slate-400">Caixa Atual</span>
+                <span id="topo-saldo" class="text-lg font-bold text-green-400">R$ 0,00</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL (ABAS) -->
+    <main class="container mx-auto p-6 flex-grow max-w-7xl">
+
+        <!-- ================= ABA 1: DASHBOARD / PDV ================= -->
+        <section id="tab-dashboard" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Frente de Caixa -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md border-t-4 border-green-500">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">⚡ Frente de Caixa (Nova Venda)</h2>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-600">Selecione o Produto</label>
-                            <select id="select-produto" class="w-full mt-1 p-2 border rounded focus:ring focus:ring-green-300">
+                            <label class="block text-sm font-medium text-gray-600">Produto</label>
+                            <select id="select-produto-venda" class="w-full mt-1 p-2.5 border rounded-lg focus:ring focus:ring-green-300 bg-white">
                                 <option value="">Carregando produtos...</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-600">Quantidade</label>
-                            <input type="number" id="qtd-venda" value="1" min="1" class="w-full mt-1 p-2 border rounded focus:ring focus:ring-green-300">
+                            <input type="number" id="qtd-venda" value="1" min="1" class="w-full mt-1 p-2.5 border rounded-lg focus:ring focus:ring-green-300">
                         </div>
                     </div>
-                    <button onclick="adicionarAoCarrinho()" class="w-full bg-green-600 text-white p-2.5 rounded font-semibold hover:bg-green-700 transition shadow">
+                    <button onclick="adicionarAoCarrinho()" class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 transition shadow">
                         ➕ Adicionar ao Carrinho
                     </button>
 
-                    <!-- Tabela do Carrinho -->
+                    <!-- Carrinho -->
                     <div class="mt-6">
-                        <h3 class="text-md font-semibold text-gray-700 mb-2">Itens da Venda Atual</h3>
-                        <div class="overflow-x-auto border rounded max-h-48 overflow-y-auto">
+                        <h3 class="text-md font-semibold text-gray-700 mb-2">Itens da Venda</h3>
+                        <div class="overflow-x-auto border rounded-lg max-h-48 overflow-y-auto">
                             <table class="w-full text-left border-collapse">
                                 <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
                                     <tr>
-                                        <th class="p-2">Produto</th>
-                                        <th class="p-2">Preço Unit.</th>
-                                        <th class="p-2">Qtd</th>
-                                        <th class="p-2">Subtotal</th>
+                                        <th class="p-3">Produto</th>
+                                        <th class="p-3">Preço Unit.</th>
+                                        <th class="p-3">Qtd</th>
+                                        <th class="p-3">Subtotal</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabela-carrinho" class="text-sm divide-y divide-gray-200">
-                                    <tr>
-                                        <td colspan="4" class="p-4 text-center text-gray-400">Carrinho vazio</td>
-                                    </tr>
+                                    <tr><td colspan="4" class="p-4 text-center text-gray-400">Carrinho vazio</td></tr>
                                 </tbody>
                             </table>
                         </div>
-                        <div class="flex justify-between items-center mt-4 pt-2 border-t">
-                            <span class="text-lg font-bold text-gray-700">Total a Pagar: <span id="total-carrinho" class="text-green-600">R$ 0,00</span></span>
-                            <button onclick="finalizarVenda()" class="bg-blue-600 text-white px-6 py-2.5 rounded font-semibold hover:bg-blue-700 transition shadow">
-                                💰 Finalizar Venda
+                        <div class="flex justify-between items-center mt-4 pt-3 border-t">
+                            <span class="text-lg font-bold text-gray-700">Total: <span id="total-carrinho" class="text-green-600">R$ 0,00</span></span>
+                            <button onclick="finalizarVenda()" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition shadow">
+                                💰 Finalizar Venda & Gerar Pix
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Lista de Produtos Cadastrados -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold text-gray-700">📦 Estoque de Produtos</h2>
-                        <button onclick="carregarDados()" class="text-sm bg-gray-100 text-gray-600 px-3 py-1.5 rounded hover:bg-gray-200 transition">
-                            🔄 Atualizar
-                        </button>
+                <!-- Resumo Rápido Lateral -->
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-blue-500">
+                        <h2 class="text-lg font-semibold mb-2 text-gray-800">📌 Resumo Operacional</h2>
+                        <p class="text-sm text-gray-600 mb-4">Utilize o menu superior para gerenciar o estoque completo ou emitir relatórios de fluxo de caixa.</p>
+                        <div class="space-y-3">
+                            <button onclick="mudarTab('estoque')" class="w-full text-left p-3 rounded-lg bg-slate-50 hover:bg-slate-100 border transition flex justify-between items-center font-medium text-slate-700">
+                                <span>📦 Gerenciar Estoque</span> <span>→</span>
+                            </button>
+                            <button onclick="mudarTab('caixa')" class="w-full text-left p-3 rounded-lg bg-slate-50 hover:bg-slate-100 border transition flex justify-between items-center font-medium text-slate-700">
+                                <span>💸 Extratos & Saídas de Caixa</span> <span>→</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="overflow-x-auto max-h-60 overflow-y-auto border rounded">
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= ABA 2: ESTOQUE ================= -->
+        <section id="tab-estoque" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Formulário de Cadastro / Edição -->
+                <div class="bg-white p-6 rounded-xl shadow-md h-fit border-t-4 border-blue-600">
+                    <h2 id="titulo-form-produto" class="text-xl font-semibold mb-4 text-gray-800">➕ Cadastrar Produto</h2>
+                    <form id="form-produto" onsubmit="salvarProduto(event)" class="space-y-4">
+                        <input type="hidden" id="edit-id">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600">Nome do Produto</label>
+                            <input type="text" id="prod-nome" required class="w-full mt-1 p-2.5 border rounded-lg focus:ring focus:ring-blue-300">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600">Preço de Venda (R$)</label>
+                            <input type="number" step="0.01" id="prod-preco" required class="w-full mt-1 p-2.5 border rounded-lg focus:ring focus:ring-blue-300">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600">Quantidade em Estoque</label>
+                            <input type="number" id="prod-estoque" required class="w-full mt-1 p-2.5 border rounded-lg focus:ring focus:ring-blue-300">
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" id="btn-salvar-produto" class="flex-grow bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition shadow">
+                                Salvar Produto
+                            </button>
+                            <button type="button" id="btn-cancelar-edicao" onclick="cancelarEdicao()" class="hidden bg-gray-300 text-gray-700 px-4 py-3 rounded-lg font-semibold hover:bg-gray-400 transition">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tabela e Pesquisa de Produtos -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md space-y-4">
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <h2 class="text-xl font-semibold text-gray-800">📦 Catálogo de Produtos</h2>
+                        
+                        <!-- Barra de Pesquisa -->
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <input type="text" id="busca-produto-input" placeholder="Pesquisar por ID ou Nome..." class="p-2 border rounded-lg text-sm w-full md:w-64 focus:ring focus:ring-blue-300">
+                            <button onclick="pesquisarProdutos()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-700 transition">
+                                🔍 Buscar
+                            </button>
+                            <button onclick="carregarEstoqueCompleto()" class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg text-sm hover:bg-gray-200 transition" title="Limpar Filtro">
+                                🔄
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto border rounded-lg max-h-[500px] overflow-y-auto">
                         <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
+                            <thead class="bg-gray-50 text-gray-600 text-xs uppercase sticky top-0">
                                 <tr>
-                                    <th class="p-2">ID</th>
-                                    <th class="p-2">Nome</th>
-                                    <th class="p-2">Preço</th>
-                                    <th class="p-2">Estoque</th>
+                                    <th class="p-3">ID</th>
+                                    <th class="p-3">Nome</th>
+                                    <th class="p-3">Preço</th>
+                                    <th class="p-3">Estoque</th>
+                                    <th class="p-3 text-center">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabela-produtos" class="text-sm divide-y divide-gray-200">
-                                <!-- Inserido via JS -->
+                            <tbody id="tabela-estoque-geral" class="text-sm divide-y divide-gray-200">
+                                <!-- Preenchido via JS -->
                             </tbody>
                         </table>
                     </div>
                 </div>
 
             </div>
+        </section>
 
-            <!-- COLUNA 3: Cadastro de Produtos -->
-            <div class="bg-white p-6 rounded-lg shadow-md h-fit border-t-4 border-blue-500">
-                <h2 class="text-xl font-semibold mb-4 text-gray-700">➕ Cadastrar Produto</h2>
-                <form id="form-produto" onsubmit="cadastrarProduto(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600">Nome do Produto</label>
-                        <input type="text" id="nome" required class="w-full mt-1 p-2 border rounded focus:ring focus:ring-blue-300">
+        <!-- ================= ABA 3: CAIXA & RELATÓRIOS ================= -->
+        <section id="tab-caixa" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Registrar Saída no Caixa (Sangria / Despesa) -->
+                <div class="bg-white p-6 rounded-xl shadow-md h-fit border-t-4 border-red-500">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">💸 Registrar Saída de Caixa</h2>
+                    <form id="form-saida-caixa" onsubmit="registrarSaidaCaixa(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600">Valor da Saída (R$)</label>
+                            <input type="number" step="0.01" id="saida-valor" required class="w-full mt-1 p-2.5 border rounded-lg focus:ring focus:ring-red-300">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600">Motivo / Descrição</label>
+                            <input type="text" id="saida-motivo" placeholder="Ex: Pagamento fornecedor, Troco..." required class="w-full mt-1 p-2.5 border rounded-lg focus:ring focus:ring-red-300">
+                        </div>
+                        <button type="submit" class="w-full bg-red-600 text-white p-3 rounded-lg font-semibold hover:bg-red-700 transition shadow">
+                            Registrar Retirada
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Relatórios e Movimentos -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md space-y-4">
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <h2 class="text-xl font-semibold text-gray-800">📊 Relatório de Movimentos do Caixa</h2>
+                        
+                        <!-- Pesquisa de Movimento por ID -->
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <input type="number" id="busca-movimento-id" placeholder="ID do Movimento..." class="p-2 border rounded-lg text-sm w-full md:w-48 focus:ring focus:ring-blue-300">
+                            <button onclick="buscarMovimentoPorId()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-700 transition">
+                                🔍 Buscar ID
+                            </button>
+                            <button onclick="carregarMovimentosCaixa()" class="bg-gray-100 text-gray-600 px-3 py-2 rounded-lg text-sm hover:bg-gray-200 transition" title="Ver Todos (Geral)">
+                                🔄 Geral
+                            </button>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600">Preço de Venda (R$)</label>
-                        <input type="number" step="0.01" id="preco" required class="w-full mt-1 p-2 border rounded focus:ring focus:ring-blue-300">
+
+                    <div class="overflow-x-auto border rounded-lg max-h-[500px] overflow-y-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50 text-gray-600 text-xs uppercase sticky top-0">
+                                <tr>
+                                    <th class="p-3">ID</th>
+                                    <th class="p-3">Data/Hora</th>
+                                    <th class="p-3">Tipo</th>
+                                    <th class="p-3">Descrição</th>
+                                    <th class="p-3">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-movimentos" class="text-sm divide-y divide-gray-200">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600">Quantidade Inicial</label>
-                        <input type="number" id="estoque" required class="w-full mt-1 p-2 border rounded focus:ring focus:ring-blue-300">
-                    </div>
-                    <button type="submit" class="w-full bg-blue-600 text-white p-2.5 rounded font-semibold hover:bg-blue-700 transition shadow">
-                        Salvar no Estoque
-                    </button>
-                </form>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= MODAL DE SUCESSO DA VENDA / PIX ================= -->
+    <div id="modal-sucesso" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center space-y-4 relative animate-fade-in">
+            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-3xl">
+                ✅
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800">Venda Realizada com Sucesso!</h3>
+            <p class="text-sm text-gray-600">Pedido ID: <span id="modal-pedido-id" class="font-semibold text-gray-800"></span></p>
+            
+            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
+                <p class="text-sm font-semibold text-gray-700">Escaneie o QR Code Pix abaixo:</p>
+                <div id="qrcode-container" class="flex justify-center bg-white p-3 rounded-lg shadow-inner inline-block">
+                    <div id="qrcode"></div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Pix Copia e Cola:</label>
+                    <input type="text" id="modal-pix-texto" readonly class="w-full text-xs p-2 border rounded bg-white text-gray-600 select-all font-mono">
+                </div>
+                <button onclick="copiarPix()" class="w-full bg-slate-800 text-white py-2 rounded-lg text-sm font-semibold hover:bg-slate-700 transition">
+                    📋 Copiar Código Pix
+                </button>
             </div>
 
+            <button onclick="fecharModalSucesso()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition shadow">
+                Nova Venda / Concluir
+            </button>
         </div>
     </div>
 
-    <!-- Script de Integração -->
+    <!-- SCRIPT DE GERENCIAMENTO DA SPA -->
     <script>
         const API_URL = 'http://localhost:8080/api';
         let produtosCache = [];
         let carrinho = [];
 
-        async function carregarDados() {
-            await buscarProdutos();
-            await buscarSaldoCaixa();
+        // --- CONTROLE DE ABAS ---
+        function mudarTab(tab) {
+            document.getElementById('tab-dashboard').classList.add('hidden');
+            document.getElementById('tab-estoque').classList.add('hidden');
+            document.getElementById('tab-caixa').classList.add('hidden');
+
+            document.getElementById('btn-tab-dashboard').className = "px-4 py-2 rounded-lg font-semibold text-sm transition bg-slate-800 text-slate-300 hover:bg-slate-700";
+            document.getElementById('btn-tab-estoque').className = "px-4 py-2 rounded-lg font-semibold text-sm transition bg-slate-800 text-slate-300 hover:bg-slate-700";
+            document.getElementById('btn-tab-caixa').className = "px-4 py-2 rounded-lg font-semibold text-sm transition bg-slate-800 text-slate-300 hover:bg-slate-700";
+
+            if (tab === 'dashboard') {
+                document.getElementById('tab-dashboard').classList.remove('hidden');
+                document.getElementById('btn-tab-dashboard').className = "px-4 py-2 rounded-lg font-semibold text-sm transition bg-blue-600 text-white shadow";
+                carregarProdutosSelect();
+            } else if (tab === 'estoque') {
+                document.getElementById('tab-estoque').classList.remove('hidden');
+                document.getElementById('btn-tab-estoque').className = "px-4 py-2 rounded-lg font-semibold text-sm transition bg-blue-600 text-white shadow";
+                carregarEstoqueCompleto();
+            } else if (tab === 'caixa') {
+                document.getElementById('tab-caixa').classList.remove('hidden');
+                document.getElementById('btn-tab-caixa').className = "px-4 py-2 rounded-lg font-semibold text-sm transition bg-blue-600 text-white shadow";
+                carregarMovimentosCaixa();
+            }
+            atualizarSaldoTopo();
         }
 
-        async function buscarProdutos() {
+        async function inicializar() {
+            await atualizarSaldoTopo();
+            await carregarProdutosSelect();
+        }
+
+        async function atualizarSaldoTopo() {
+            try {
+                const response = await fetch(`${API_URL}/movimentos-caixa/saldo`);
+                if (response.ok) {
+                    const saldo = await response.json();
+                    document.getElementById('topo-saldo').innerText = `R$ ${saldo.toFixed(2)}`;
+                }
+            } catch (error) {
+                document.getElementById('topo-saldo').innerText = `R$ 0,00`;
+            }
+        }
+
+        // --- PDV / VENDAS ---
+        async function carregarProdutosSelect() {
             try {
                 const response = await fetch(`${API_URL}/produtos`);
                 produtosCache = await response.json();
                 
-                // Preenche a tabela de estoque
-                const tabela = document.getElementById('tabela-produtos');
-                tabela.innerHTML = '';
-                
-                // Preenche o select da venda
-                const select = document.getElementById('select-produto');
+                const select = document.getElementById('select-produto-venda');
                 select.innerHTML = '<option value="">Selecione um produto...</option>';
 
                 produtosCache.forEach(p => {
-                    tabela.innerHTML += `
-                        <tr class="hover:bg-gray-50">
-                            <td class="p-2">${p.id}</td>
-                            <td class="p-2 font-medium">${p.nome}</td>
-                            <td class="p-2">R$ ${p.preco.toFixed(2)}</td>
-                            <td class="p-2"><span class="px-2 py-0.5 rounded text-xs ${p.quantidadeEstoque > 5 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.quantidadeEstoque} un</span></td>
-                        </tr>
-                    `;
-
                     select.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${p.preco.toFixed(2)} (Estoque: ${p.quantidadeEstoque})</option>`;
                 });
             } catch (error) {
-                console.error("Erro ao buscar produtos:", error);
-            }
-        }
-
-        async function buscarSaldoCaixa() {
-            try {
-                const response = await fetch(`${API_URL}/movimentos-caixa/saldo`);
-                const saldo = await response.json();
-                document.getElementById('saldo-box').innerText = `Caixa: R$ ${saldo.toFixed(2)}`;
-            } catch (error) {
-                document.getElementById('saldo-box').innerText = `Caixa: R$ 0,00`;
-            }
-        }
-
-        async function cadastrarProduto(event) {
-            event.preventDefault();
-            const produto = {
-                nome: document.getElementById('nome').value,
-                preco: parseFloat(document.getElementById('preco').value),
-                quantidadeEstoque: parseInt(document.getElementById('estoque').value)
-            };
-
-            const response = await fetch(`${API_URL}/produtos`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(produto)
-            });
-
-            if (response.ok) {
-                alert('Produto cadastrado com sucesso!');
-                document.getElementById('form-produto').reset();
-                carregarDados();
-            } else {
-                alert('Erro ao cadastrar produto.');
+                console.error("Erro ao carregar produtos:", error);
             }
         }
 
         function adicionarAoCarrinho() {
-            const produtoId = parseInt(document.getElementById('select-produto').value);
+            const produtoId = parseInt(document.getElementById('select-produto-venda').value);
             const quantidade = parseInt(document.getElementById('qtd-venda').value);
 
-            if (!produtoId) {
-                alert('Selecione um produto.');
-                return;
-            }
-
+            if (!produtoId) { alert('Selecione um produto.'); return; }
             const produtoObj = produtosCache.find(p => p.id === produtoId);
             if (!produtoObj) return;
 
@@ -219,14 +353,12 @@
                 return;
             }
 
-            // Adiciona ao carrinho local
             carrinho.push({
                 produto: { id: produtoObj.id },
                 nome: produtoObj.nome,
                 precoUnitario: produtoObj.preco,
                 quantidade: quantidade
             });
-
             atualizarTabelaCarrinho();
         }
 
@@ -241,28 +373,23 @@
                 return;
             }
 
-            carrinho.forEach((item, index) => {
+            carrinho.forEach(item => {
                 let subtotal = item.precoUnitario * item.quantidade;
                 totalGeral += subtotal;
-
                 tabela.innerHTML += `
                     <tr class="hover:bg-gray-50">
-                        <td class="p-2">${item.nome}</td>
-                        <td class="p-2">R$ ${item.precoUnitario.toFixed(2)}</td>
-                        <td class="p-2">${item.quantidade}</td>
-                        <td class="p-2 font-semibold">R$ ${subtotal.toFixed(2)}</td>
+                        <td class="p-3">${item.nome}</td>
+                        <td class="p-3">R$ ${item.precoUnitario.toFixed(2)}</td>
+                        <td class="p-3">${item.quantidade}</td>
+                        <td class="p-3 font-semibold">R$ ${subtotal.toFixed(2)}</td>
                     </tr>
                 `;
             });
-
             document.getElementById('total-carrinho').innerText = `R$ ${totalGeral.toFixed(2)}`;
         }
 
         async function finalizarVenda() {
-            if (carrinho.length === 0) {
-                alert('Adicione itens ao carrinho antes de finalizar a venda.');
-                return;
-            }
+            if (carrinho.length === 0) { alert('Carrinho vazio.'); return; }
 
             const pedidoDTO = {
                 itens: carrinho.map(item => ({
@@ -279,10 +406,15 @@
                 });
 
                 if (response.ok) {
-                    alert('Venda finalizada com sucesso! Estoque baixado e caixa movimentado.');
+                    const pedidoCriado = await response.json();
+                    
+                    // Limpa o carrinho
                     carrinho = [];
                     atualizarTabelaCarrinho();
-                    carregarDados();
+                    inicializar();
+
+                    // Abre o Modal com o Pix
+                    abrirModalSucesso(pedidoCriado);
                 } else {
                     alert('Erro ao finalizar venda. Verifique o estoque.');
                 }
@@ -291,7 +423,245 @@
             }
         }
 
-        window.onload = carregarDados;
+        // --- MODAL DE SUCESSO / PIX ---
+        function abrirModalSucesso(pedido) {
+            document.getElementById('modal-pedido-id').innerText = pedido.id;
+            document.getElementById('modal-pix-texto').value = pedido.pixCopiaECola || "PIX indisponível";
+
+            // Limpa QR Code anterior e gera novo
+            const qrDiv = document.getElementById('qrcode');
+            qrDiv.innerHTML = "";
+            if (pedido.pixCopiaECola) {
+                new QRCode(qrDiv, {
+                    text: pedido.pixCopiaECola,
+                    width: 180,
+                    height: 180
+                });
+            }
+
+            document.getElementById('modal-sucesso').classList.remove('hidden');
+        }
+
+        function fecharModalSucesso() {
+            document.getElementById('modal-sucesso').classList.add('hidden');
+        }
+
+        function copiarPix() {
+            const inputPix = document.getElementById('modal-pix-texto');
+            inputPix.select();
+            inputPix.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(inputPix.value);
+            alert('Código Pix Copia e Cola copiado para a área de transferência!');
+        }
+
+        // --- ESTOQUE (CRUD + BUSCA) ---
+        async function carregarEstoqueCompleto() {
+            try {
+                const response = await fetch(`${API_URL}/produtos`);
+                const produtos = await response.json();
+                renderizarTabelaEstoque(produtos);
+            } catch (error) {
+                console.error("Erro ao carregar estoque:", error);
+            }
+        }
+
+        async function pesquisarProdutos() {
+            const termo = document.getElementById('busca-produto-input').value.trim();
+            if (!termo) { carregarEstoqueCompleto(); return; }
+
+            if (!isNaN(termo)) {
+                try {
+                    const response = await fetch(`${API_URL}/produtos/${termo}`);
+                    if (response.ok) {
+                        const produto = await response.json();
+                        renderizarTabelaEstoque([produto]);
+                        return;
+                    }
+                } catch (e) { }
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/produtos`);
+                const produtos = await response.json();
+                const filtrados = produtos.filter(p => p.nome.toLowerCase().includes(termo.toLowerCase()));
+                renderizarTabelaEstoque(filtrados);
+            } catch (error) {
+                console.error("Erro na pesquisa:", error);
+            }
+        }
+
+        function renderizarTabelaEstoque(produtos) {
+            const tabela = document.getElementById('tabela-estoque-geral');
+            tabela.innerHTML = '';
+            if (produtos.length === 0) {
+                tabela.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Nenhum produto encontrado</td></tr>`;
+                return;
+            }
+
+            produtos.forEach(p => {
+                tabela.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-3">${p.id}</td>
+                        <td class="p-3 font-medium">${p.nome}</td>
+                        <td class="p-3">R$ ${p.preco.toFixed(2)}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 rounded text-xs ${p.quantidadeEstoque > 5 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.quantidadeEstoque} un</span></td>
+                        <td class="p-3 text-center space-x-2">
+                            <button onclick="prepararEdicao(${p.id}, '${p.nome}', ${p.preco}, ${p.quantidadeEstoque})" class="bg-amber-500 text-white px-2.5 py-1 rounded text-xs font-semibold hover:bg-amber-600 transition">Editar</button>
+                            <button onclick="deletarProduto(${p.id})" class="bg-red-600 text-white px-2.5 py-1 rounded text-xs font-semibold hover:bg-red-700 transition">Excluir</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function salvarProduto(event) {
+            event.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const produto = {
+                nome: document.getElementById('prod-nome').value,
+                preco: parseFloat(document.getElementById('prod-preco').value),
+                quantidadeEstoque: parseInt(document.getElementById('prod-estoque').value)
+            };
+
+            const url = id ? `${API_URL}/produtos/${id}` : `${API_URL}/produtos`;
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(produto)
+                });
+
+                if (response.ok) {
+                    alert(id ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
+                    cancelarEdicao();
+                    carregarEstoqueCompleto();
+                } else {
+                    alert('Erro ao salvar produto.');
+                }
+            } catch (error) {
+                console.error("Erro:", error);
+            }
+        }
+
+        function prepararEdicao(id, nome, preco, estoque) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('prod-nome').value = nome;
+            document.getElementById('prod-preco').value = preco;
+            document.getElementById('prod-estoque').value = estoque;
+            document.getElementById('titulo-form-produto').innerText = `✏️ Editando Produto ID: ${id}`;
+            document.getElementById('btn-salvar-produto').innerText = "Atualizar Produto";
+            document.getElementById('btn-cancelar-edicao').classList.remove('hidden');
+        }
+
+        function cancelarEdicao() {
+            document.getElementById('form-produto').reset();
+            document.getElementById('edit-id').value = '';
+            document.getElementById('titulo-form-produto').innerText = "➕ Cadastrar Produto";
+            document.getElementById('btn-salvar-produto').innerText = "Salvar Produto";
+            document.getElementById('btn-cancelar-edicao').classList.add('hidden');
+        }
+
+        async function deletarProduto(id) {
+            if (!confirm(`Deseja realmente excluir o produto ID ${id}?`)) return;
+
+            try {
+                const response = await fetch(`${API_URL}/produtos/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    alert('Produto excluído com sucesso!');
+                    carregarEstoqueCompleto();
+                } else {
+                    alert('Erro ao excluir produto. (Caso já tenha sido vendido, lembre-se de usar a exclusão lógica/soft delete no back-end)');
+                }
+            } catch (error) {
+                console.error("Erro:", error);
+            }
+        }
+
+        // --- CAIXA E RELATÓRIOS ---
+        async function carregarMovimentosCaixa() {
+            try {
+                const response = await fetch(`${API_URL}/movimentos-caixa`);
+                const movimentos = await response.json();
+                renderizarTabelaMovimentos(movimentos);
+            } catch (error) {
+                console.error("Erro ao carregar movimentos:", error);
+            }
+        }
+
+        async function buscarMovimentoPorId() {
+            const id = document.getElementById('busca-movimento-id').value;
+            if (!id) { carregarMovimentosCaixa(); return; }
+
+            try {
+                const response = await fetch(`${API_URL}/movimentos-caixa/${id}`);
+                if (response.ok) {
+                    const movimento = await response.json();
+                    renderizarTabelaMovimentos([movimento]);
+                } else {
+                    alert('Movimento não encontrado.');
+                }
+            } catch (error) {
+                console.error("Erro:", error);
+            }
+        }
+
+        function renderizarTabelaMovimentos(movimentos) {
+            const tabela = document.getElementById('tabela-movimentos');
+            tabela.innerHTML = '';
+            if (movimentos.length === 0) {
+                tabela.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Nenhum movimento registrado</td></tr>`;
+                return;
+            }
+
+            movimentos.forEach(m => {
+                const isEntrada = m.tipo === 'ENTRADA';
+                tabela.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-3">${m.id}</td>
+                        <td class="p-3 text-xs text-gray-500">${new Date(m.dataHora).toLocaleString('pt-BR')}</td>
+                        <td class="p-3 font-semibold ${isEntrada ? 'text-green-600' : 'text-red-600'}">${m.tipo}</td>
+                        <td class="p-3">${m.descricao}</td>
+                        <td class="p-3 font-bold ${isEntrada ? 'text-green-600' : 'text-red-600'}">${isEntrada ? '+' : '-'} R$ ${m.valor.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function registrarSaidaCaixa(event) {
+            event.preventDefault();
+            const valor = parseFloat(document.getElementById('saida-valor').value);
+            const descricao = document.getElementById('saida-motivo').value;
+
+            const movimentoDTO = {
+                tipo: 'SAIDA',
+                valor: valor,
+                descricao: `Saída Manual: ${descricao}`
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/movimentos-caixa`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(movimentoDTO)
+                });
+
+                if (response.ok) {
+                    alert('Saída de caixa registrada com sucesso!');
+                    document.getElementById('form-saida-caixa').reset();
+                    carregarMovimentosCaixa();
+                    atualizarSaldoTopo();
+                } else {
+                    alert('Erro ao registrar saída de caixa.');
+                }
+            } catch (error) {
+                console.error("Erro:", error);
+            }
+        }
+
+        // Inicializa ao carregar a página
+        window.onload = inicializar;
     </script>
 </body>
 </html>
