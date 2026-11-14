@@ -10,6 +10,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 @Entity 
@@ -17,6 +18,7 @@ import jakarta.persistence.Table;
 public class MovimentoCaixa {
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SequenceGenerator(name = "seq", allocationSize = 1)
     private Long id;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
