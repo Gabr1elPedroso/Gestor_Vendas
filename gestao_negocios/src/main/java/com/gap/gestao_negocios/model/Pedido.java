@@ -10,13 +10,16 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Entity 
 @Table(name = "pedidos")
 public class Pedido {
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SequenceGenerator(name = "seq", allocationSize = 1)
     private Long id;
     @Column(name = "data_hora", nullable = false)
     private LocalDateTime dataHora;
@@ -29,6 +32,9 @@ public class Pedido {
 
     @Column(nullable = false, length = 50)
     private String status;
+
+    @Transient
+    private String pixCopiaECola;
 
 
 
@@ -91,6 +97,14 @@ public class Pedido {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getPixCopiaECola() {
+        return pixCopiaECola;
+    }
+
+    public void setPixCopiaECola(String pixCopiaECola) {
+        this.pixCopiaECola = pixCopiaECola;
     }
     
 }
