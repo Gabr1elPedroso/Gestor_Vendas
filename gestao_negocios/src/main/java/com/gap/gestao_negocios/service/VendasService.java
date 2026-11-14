@@ -1,4 +1,5 @@
 package com.gap.gestao_negocios.service;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -16,28 +17,27 @@ import com.gap.gestao_negocios.repository.ProdutoRepository;
 
 import jakarta.transaction.Transactional;
 
-
 @Service
 public class VendasService {
-    
-    @Autowired 
+
+    @Autowired
     private ProdutoRepository produtoRepository;
 
-    @Autowired 
+    @Autowired
     private PedidoRepository pedidoRepository;
 
-    @Autowired 
+    @Autowired
     private MovimentoCaixaRepository movimentoCaixaRepository;
 
-    @Autowired 
+    @Autowired
     private MovimentoCaixaService movimentoCaixaService;
 
-    @Transactional 
-    public Pedido finalizarVenda(Pedido pedido){
+    @Transactional
+    public Pedido finalizarVenda(Pedido pedido) {
         BigDecimal valorTotal = BigDecimal.ZERO;
-        for(ItemPedido item : pedido.getItens()){
+        for (ItemPedido item : pedido.getItens()) {
             Produto produto = produtoRepository.findById(item.getProduto().getId()).orElseThrow(() -> new RuntimeException("Produto não encontrado: " + item.getProduto().getId()));
-            
+
             produto.baixarEstoque(item.getQuantidade());
             produtoRepository.save(produto);
 
@@ -56,15 +56,27 @@ public class VendasService {
         MovimentoCaixa movimentoCaixa = new MovimentoCaixa(TipoMovimento.ENTRADA, pedidoSalvo.getValorTotal(), "Venda realizada - Pedido ID: " + pedidoSalvo.getId());
         movimentoCaixaRepository.save(movimentoCaixa);
 
+        String chavePix = "sua-chave-pix@email.com";
+        String nomeLoja = "GAP Gestao Comercial";
+        String cidadeLoja = "Sorocaba";
+
+        String pixPayload = PixService.gerarPayloadPix(
+                chavePix,
+                nomeLoja,
+                cidadeLoja,
+                pedidoSalvo.getValorTotal(),
+                "PEDIDO" + pedidoSalvo.getId()
+        );
+
         return pedidoSalvo;
-        
+
     }
 
-    public Pedido buscarPorId(Long id){
+    public Pedido buscarPorId(Long id) {
         return pedidoRepository.findById(id).orElseThrow(() -> new RuntimeException("Pedido não encontrado: " + id));
     }
 
-    public List<Pedido> listarTodos(){
+    public List<Pedido> listarTodos() {
         return pedidoRepository.findAll();
     }
 }
