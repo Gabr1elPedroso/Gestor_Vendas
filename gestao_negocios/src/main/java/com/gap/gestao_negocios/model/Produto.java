@@ -75,9 +75,12 @@ public class Produto{
         this.quantidadeEstoque = quantidadeEstoque;
     }
 
+    public Boolean getAtivo() {
+        return ativo;
+    }
 
-
-
-
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
+    }
 
 }

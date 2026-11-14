@@ -29,12 +29,13 @@ public class ProdutoService {
 
     public Produto deletarProduto(Long id){
         Produto produtoExistente = produtoRepository.findById(id).orElseThrow(() -> new RuntimeException("Produto não encontrado: " + id));
-        produtoRepository.delete(produtoExistente);
+        produtoExistente.setAtivo(false);
+        produtoRepository.save(produtoExistente);
         return produtoExistente;
     }
 
     public List<Produto> listarTodos(){
-        return produtoRepository.findAll();
+        return produtoRepository.findByAtivoTrue();
     }
 
     public Produto buscarPorId(Long id){
