@@ -79,10 +79,11 @@
                                         <th class="p-3">Preço Unit.</th>
                                         <th class="p-3">Qtd</th>
                                         <th class="p-3">Subtotal</th>
+                                        <th class="p-3 text-center">Ação</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabela-carrinho" class="text-sm divide-y divide-gray-200">
-                                    <tr><td colspan="4" class="p-4 text-center text-gray-400">Carrinho vazio</td></tr>
+                                    <tr><td colspan="5" class="p-4 text-center text-gray-400">Carrinho vazio</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -245,17 +246,30 @@
 
     </main>
 
-    <!-- ================= MODAL DE SUCESSO DA VENDA / PIX ================= -->
+    <!-- ================= MODAL DE SUCESSO DA VENDA / PIX / RESUMO ================= -->
     <div id="modal-sucesso" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center space-y-4 relative animate-fade-in">
-            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-3xl">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 text-center space-y-4 relative max-h-[90vh] overflow-y-auto">
+            <div class="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-2xl">
                 ✅
             </div>
             <h3 class="text-2xl font-bold text-gray-800">Venda Realizada com Sucesso!</h3>
             <p class="text-sm text-gray-600">Pedido ID: <span id="modal-pedido-id" class="font-semibold text-gray-800"></span></p>
             
+            <!-- Resumo dos Itens do Pedido -->
+            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-left space-y-2">
+                <h4 class="text-xs font-bold uppercase text-gray-500 tracking-wider">🛒 Resumo do Pedido</h4>
+                <div id="modal-lista-itens" class="space-y-1.5 text-sm max-h-40 overflow-y-auto pr-1">
+                    <!-- Preenchido via JS -->
+                </div>
+                <div class="border-t pt-2 flex justify-between font-bold text-gray-800 text-base">
+                    <span>Total a Pagar:</span>
+                    <span id="modal-valor-total" class="text-green-600">R$ 0,00</span>
+                </div>
+            </div>
+
+            <!-- Pagamento Pix -->
             <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
-                <p class="text-sm font-semibold text-gray-700">Escaneie o QR Code Pix abaixo:</p>
+                <p class="text-sm font-semibold text-gray-700">QR Code Pix para Pagamento:</p>
                 <div id="qrcode-container" class="flex justify-center bg-white p-3 rounded-lg shadow-inner inline-block">
                     <div id="qrcode"></div>
                 </div>
@@ -263,24 +277,86 @@
                     <label class="block text-xs font-medium text-gray-500 mb-1">Pix Copia e Cola:</label>
                     <input type="text" id="modal-pix-texto" readonly class="w-full text-xs p-2 border rounded bg-white text-gray-600 select-all font-mono">
                 </div>
-                <button onclick="copiarPix()" class="w-full bg-slate-800 text-white py-2 rounded-lg text-sm font-semibold hover:bg-slate-700 transition">
-                    📋 Copiar Código Pix
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="copiarPix()" class="flex-1 bg-slate-800 text-white py-2.5 rounded-lg text-xs font-semibold hover:bg-slate-700 transition shadow">
+                        📋 Copiar Pix
+                    </button>
+                    <button onclick="copiarResumoWhatsApp()" class="flex-1 bg-green-600 text-white py-2.5 rounded-lg text-xs font-semibold hover:bg-green-700 transition shadow">
+                        📱 Copiar Resumo
+                    </button>
+                </div>
             </div>
 
-            <button onclick="fecharModalSucesso()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition shadow">
+            <button onclick="fecharModalSucesso()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow">
                 Nova Venda / Concluir
             </button>
         </div>
     </div>
+
+    <!-- ================= MODAL DE CONFIRMAÇÃO ================= -->
+    <div id="modal-confirmacao" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center space-y-4">
+            <div class="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                ⚠️
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">Confirmação</h3>
+            <p id="modal-confirmacao-texto" class="text-sm text-gray-600">Deseja realmente executar esta ação?</p>
+            <div class="flex gap-3 pt-2">
+                <button onclick="fecharModalConfirmacao()" class="flex-1 bg-gray-200 text-gray-700 py-2.5 rounded-xl font-semibold hover:bg-gray-300 transition">
+                    Cancelar
+                </button>
+                <button id="btn-confirmar-acao" class="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-semibold hover:bg-red-700 transition shadow">
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TOAST NOTIFICATION FLUTUANTE ================= -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <!-- SCRIPT DE GERENCIAMENTO DA SPA -->
     <script>
         const API_URL = 'http://localhost:8080/api';
         let produtosCache = [];
         let carrinho = [];
+        let acaoConfirmacaoCallback = null;
+        let ultimoPedidoGerado = null;
 
-        // --- CONTROLE DE ABAS ---
+        function mostrarToast(mensagem, tipo = 'sucesso') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgColor = tipo === 'sucesso' ? 'bg-slate-900 text-white border-l-4 border-green-500' : 'bg-slate-900 text-white border-l-4 border-red-500';
+            const icone = tipo === 'sucesso' ? '✅' : '❌';
+
+            toast.className = `pointer-events-auto px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-10 opacity-0 transition-all duration-300 ${bgColor}`;
+            toast.innerHTML = `<span class="text-lg">${icone}</span><span class="text-sm font-medium">${mensagem}</span>`;
+
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-10', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function abrirModalConfirmacao(mensagem, callback) {
+            document.getElementById('modal-confirmacao-texto').innerText = mensagem;
+            acaoConfirmacaoCallback = callback;
+            document.getElementById('modal-confirmacao').classList.remove('hidden');
+        }
+
+        function fecharModalConfirmacao() {
+            document.getElementById('modal-confirmacao').classList.add('hidden');
+            acaoConfirmacaoCallback = null;
+        }
+
+        document.getElementById('btn-confirmar-acao').onclick = function() {
+            if (acaoConfirmacaoCallback) acaoConfirmacaoCallback();
+            fecharModalConfirmacao();
+        };
+
         function mudarTab(tab) {
             document.getElementById('tab-dashboard').classList.add('hidden');
             document.getElementById('tab-estoque').classList.add('hidden');
@@ -323,7 +399,6 @@
             }
         }
 
-        // --- PDV / VENDAS ---
         async function carregarProdutosSelect() {
             try {
                 const response = await fetch(`${API_URL}/produtos`);
@@ -344,12 +419,12 @@
             const produtoId = parseInt(document.getElementById('select-produto-venda').value);
             const quantidade = parseInt(document.getElementById('qtd-venda').value);
 
-            if (!produtoId) { alert('Selecione um produto para adicionar ao carrinho.'); return; }
+            if (!produtoId) { mostrarToast('Selecione um produto para adicionar ao carrinho.', 'erro'); return; }
             const produtoObj = produtosCache.find(p => p.id === produtoId);
             if (!produtoObj) return;
 
             if (quantidade > produtoObj.quantidadeEstoque) {
-                alert('A quantidade solicitada é maior do que o estoque disponível!');
+                mostrarToast('A quantidade solicitada excede o estoque disponível!', 'erro');
                 return;
             }
 
@@ -360,6 +435,14 @@
                 quantidade: quantidade
             });
             atualizarTabelaCarrinho();
+            mostrarToast('Produto adicionado ao carrinho!', 'sucesso');
+        }
+
+        // --- REMOVER ITEM DO CARRINHO ---
+        function removerItemCarrinho(index) {
+            carrinho.splice(index, 1);
+            atualizarTabelaCarrinho();
+            mostrarToast('Item removido do carrinho.', 'sucesso');
         }
 
         function atualizarTabelaCarrinho() {
@@ -368,12 +451,12 @@
             let totalGeral = 0;
 
             if (carrinho.length === 0) {
-                tabela.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">Carrinho vazio</td></tr>`;
+                tabela.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Carrinho vazio</td></tr>`;
                 document.getElementById('total-carrinho').innerText = `R$ 0,00`;
                 return;
             }
 
-            carrinho.forEach(item => {
+            carrinho.forEach((item, index) => {
                 let subtotal = item.precoUnitario * item.quantidade;
                 totalGeral += subtotal;
                 tabela.innerHTML += `
@@ -382,6 +465,11 @@
                         <td class="p-3">R$ ${item.precoUnitario.toFixed(2)}</td>
                         <td class="p-3">${item.quantidade}</td>
                         <td class="p-3 font-semibold">R$ ${subtotal.toFixed(2)}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="removerItemCarrinho(${index})" class="bg-red-100 text-red-600 hover:bg-red-200 px-2 py-1 rounded text-xs font-semibold transition" title="Remover item">
+                                ❌ Excluir
+                            </button>
+                        </td>
                     </tr>
                 `;
             });
@@ -389,7 +477,7 @@
         }
 
         async function finalizarVenda() {
-            if (carrinho.length === 0) { alert('O carrinho está vazio. Adicione itens antes de finalizar.'); return; }
+            if (carrinho.length === 0) { mostrarToast('O carrinho está vazio.', 'erro'); return; }
 
             const pedidoDTO = {
                 itens: carrinho.map(item => ({
@@ -407,32 +495,48 @@
 
                 if (response.ok) {
                     const pedidoCriado = await response.json();
-                    
+                    ultimoPedidoGerado = pedidoCriado;
                     carrinho = [];
                     atualizarTabelaCarrinho();
                     inicializar();
-
                     abrirModalSucesso(pedidoCriado);
                 } else {
-                    alert('Não foi possível finalizar a venda. Verifique o estoque dos produtos.');
+                    mostrarToast('Erro ao finalizar venda. Verifique o estoque.', 'erro');
                 }
             } catch (error) {
-                console.error("Erro na venda:", error);
+                mostrarToast('Erro de conexão ao realizar venda.', 'erro');
             }
         }
 
-        // --- MODAL DE SUCESSO / PIX ---
         function abrirModalSucesso(pedido) {
             document.getElementById('modal-pedido-id').innerText = pedido.id;
             document.getElementById('modal-pix-texto').value = pedido.pixCopiaECola || "PIX indisponível";
+
+            const listaItensDiv = document.getElementById('modal-lista-itens');
+            listaItensDiv.innerHTML = '';
+            
+            if (pedido.itens && pedido.itens.length > 0) {
+                pedido.itens.forEach(item => {
+                    const nomeProd = item.produto ? item.produto.nome : 'Produto';
+                    const subtotal = item.precoUnitario * item.quantidade;
+                    listaItensDiv.innerHTML += `
+                        <div class="flex justify-between text-gray-700 text-xs border-b pb-1">
+                            <span>${item.quantidade}x ${nomeProd}</span>
+                            <span class="font-semibold">R$ ${subtotal.toFixed(2)}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('modal-valor-total').innerText = `R$ ${pedido.valorTotal.toFixed(2)}`;
 
             const qrDiv = document.getElementById('qrcode');
             qrDiv.innerHTML = "";
             if (pedido.pixCopiaECola) {
                 new QRCode(qrDiv, {
                     text: pedido.pixCopiaECola,
-                    width: 180,
-                    height: 180
+                    width: 160,
+                    height: 160
                 });
             }
 
@@ -441,6 +545,7 @@
 
         function fecharModalSucesso() {
             document.getElementById('modal-sucesso').classList.add('hidden');
+            ultimoPedidoGerado = null;
         }
 
         function copiarPix() {
@@ -448,17 +553,36 @@
             inputPix.select();
             inputPix.setSelectionRange(0, 99999);
             navigator.clipboard.writeText(inputPix.value);
-            alert('Código Pix Copia e Cola copiado com sucesso!');
+            mostrarToast('Código Pix copiado com sucesso!', 'sucesso');
         }
 
-        // --- ESTOQUE (CRUD + BUSCA) ---
+        function copiarResumoWhatsApp() {
+            if (!ultimoPedidoGerado) return;
+
+            let texto = `🔥 *GAP Gestão Comercial - Resumo do Pedido #${ultimoPedidoGerado.id}* 🔥\n\n`;
+            
+            if (ultimoPedidoGerado.itens) {
+                ultimoPedidoGerado.itens.forEach(item => {
+                    const nome = item.produto ? item.produto.nome : 'Item';
+                    const sub = item.precoUnitario * item.quantidade;
+                    texto += `• ${item.quantidade}x ${nome} - R$ ${sub.toFixed(2)}\n`;
+                });
+            }
+
+            texto += `\n💰 *Total a Pagar:* R$ ${ultimoPedidoGerado.valorTotal.toFixed(2)}\n`;
+            texto += `\n📲 *Chave Pix Copia e Cola:* \n${ultimoPedidoGerado.pixCopiaECola || 'N/A'}`;
+
+            navigator.clipboard.writeText(texto);
+            mostrarToast('Resumo do pedido copiado! Pronto para colar no WhatsApp.', 'sucesso');
+        }
+
         async function carregarEstoqueCompleto() {
             try {
                 const response = await fetch(`${API_URL}/produtos`);
                 const produtos = await response.json();
                 renderizarTabelaEstoque(produtos);
             } catch (error) {
-                console.error("Erro ao carregar estoque:", error);
+                mostrarToast('Erro ao carregar estoque.', 'erro');
             }
         }
 
@@ -483,7 +607,7 @@
                 const filtrados = produtos.filter(p => p.nome.toLowerCase().includes(termo.toLowerCase()));
                 renderizarTabelaEstoque(filtrados);
             } catch (error) {
-                console.error("Erro na pesquisa:", error);
+                mostrarToast('Erro ao pesquisar produtos.', 'erro');
             }
         }
 
@@ -504,7 +628,7 @@
                         <td class="p-3"><span class="px-2 py-0.5 rounded text-xs ${p.quantidadeEstoque > 5 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.quantidadeEstoque} un</span></td>
                         <td class="p-3 text-center space-x-2">
                             <button onclick="prepararEdicao(${p.id}, '${p.nome}', ${p.preco}, ${p.quantidadeEstoque})" class="bg-amber-500 text-white px-2.5 py-1 rounded text-xs font-semibold hover:bg-amber-600 transition">Editar</button>
-                            <button onclick="deletarProduto(${p.id})" class="bg-red-600 text-white px-2.5 py-1 rounded text-xs font-semibold hover:bg-red-700 transition">Excluir</button>
+                            <button onclick="confirmarDelecao(${p.id}, '${p.nome}')" class="bg-red-600 text-white px-2.5 py-1 rounded text-xs font-semibold hover:bg-red-700 transition">Excluir</button>
                         </td>
                     </tr>
                 `;
@@ -531,14 +655,14 @@
                 });
 
                 if (response.ok) {
-                    alert(id ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso no estoque!');
+                    mostrarToast(id ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!', 'sucesso');
                     cancelarEdicao();
                     carregarEstoqueCompleto();
                 } else {
-                    alert('Erro ao salvar o produto. Verifique os dados informados.');
+                    mostrarToast('Erro ao salvar o produto.', 'erro');
                 }
             } catch (error) {
-                console.error("Erro:", error);
+                mostrarToast('Erro de conexão com o servidor.', 'erro');
             }
         }
 
@@ -550,6 +674,7 @@
             document.getElementById('titulo-form-produto').innerText = `✏️ Editando Produto ID: ${id}`;
             document.getElementById('btn-salvar-produto').innerText = "Atualizar Produto";
             document.getElementById('btn-cancelar-edicao').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function cancelarEdicao() {
@@ -560,30 +685,33 @@
             document.getElementById('btn-cancelar-edicao').classList.add('hidden');
         }
 
-        async function deletarProduto(id) {
-            if (!confirm(`Tem certeza que deseja excluir o produto ID ${id}?`)) return;
+        function confirmarDelecao(id, nome) {
+            abrirModalConfirmacao(`Deseja realmente excluir o produto "${nome}" (ID: ${id})?`, () => {
+                deletarProduto(id);
+            });
+        }
 
+        async function deletarProduto(id) {
             try {
                 const response = await fetch(`${API_URL}/produtos/${id}`, { method: 'DELETE' });
                 if (response.ok) {
-                    alert('Produto removido com sucesso!');
+                    mostrarToast('Produto removido com sucesso!', 'sucesso');
                     carregarEstoqueCompleto();
                 } else {
-                    alert('Não foi possível excluir este produto pois ele possui histórico de vendas vinculado.');
+                    mostrarToast('Não é possível excluir: produto possui vendas vinculadas.', 'erro');
                 }
             } catch (error) {
-                console.error("Erro:", error);
+                mostrarToast('Erro ao tentar excluir o produto.', 'erro');
             }
         }
 
-        // --- CAIXA E RELATÓRIOS ---
         async function carregarMovimentosCaixa() {
             try {
                 const response = await fetch(`${API_URL}/movimentos-caixa`);
                 const movimentos = await response.json();
                 renderizarTabelaMovimentos(movimentos);
             } catch (error) {
-                console.error("Erro ao carregar movimentos:", error);
+                mostrarToast('Erro ao carregar movimentos do caixa.', 'erro');
             }
         }
 
@@ -597,10 +725,10 @@
                     const movimento = await response.json();
                     renderizarTabelaMovimentos([movimento]);
                 } else {
-                    alert('Nenhum movimento encontrado com este ID.');
+                    mostrarToast('Movimento não encontrado.', 'erro');
                 }
             } catch (error) {
-                console.error("Erro:", error);
+                mostrarToast('Erro na busca do movimento.', 'erro');
             }
         }
 
@@ -645,19 +773,18 @@
                 });
 
                 if (response.ok) {
-                    alert('Saída de caixa registrada com sucesso!');
+                    mostrarToast('Saída de caixa registrada com sucesso!', 'sucesso');
                     document.getElementById('form-saida-caixa').reset();
                     carregarMovimentosCaixa();
                     atualizarSaldoTopo();
                 } else {
-                    alert('Erro ao registrar a saída de caixa.');
+                    mostrarToast('Erro ao registrar saída de caixa.', 'erro');
                 }
             } catch (error) {
-                console.error("Erro:", error);
+                mostrarToast('Erro de conexão ao registrar saída.', 'erro');
             }
         }
 
-        // Inicializa ao carregar a página
         window.onload = inicializar;
     </script>
 </body>
